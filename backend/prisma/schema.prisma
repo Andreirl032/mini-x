@@ -11,3 +11,77 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// --------------------------------------------------
+// TABELAS (Models)
+// --------------------------------------------------
+
+model User {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique
+  name            String
+  email           String    @unique
+  password        String?
+  role            String
+  profile_picture String?
+  bio             String?
+  birth_date      DateTime? 
+  city            String?
+  country_code    String?
+  google_id       String?   @unique
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  posts           Post[]
+  likes           Like[]
+  
+  followers       Follow[]  @relation("FollowedUser")
+  following       Follow[]  @relation("FollowingUser")
+
+  @@map("users")
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  follower_id Int
+  followed_id Int
+  created_at  DateTime @default(now())
+
+  follower    User     @relation("FollowingUser", fields: [follower_id], references: [id])
+  followed    User     @relation("FollowedUser", fields: [followed_id], references: [id])
+
+  @@unique([followed_id, follower_id])
+  @@map("following")
+}
+
+model Like {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  post_id    Int
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id])
+  post       Post     @relation(fields: [post_id], references: [id])
+
+  @@unique([user_id, post_id])
+  @@map("likes")
+}
+
+model Post {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  parent_id  Int?
+  body       String?
+  image      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user       User     @relation(fields: [user_id], references: [id])
+  
+  parent     Post?    @relation("PostReplies", fields: [parent_id], references: [id])
+  replies    Post[]   @relation("PostReplies")
+  
+  likes      Like[]
+
+  @@map("posts")
+}
