@@ -38,6 +38,8 @@ model User {
   followers       Follow[]  @relation("FollowedUser")
   following       Follow[]  @relation("FollowingUser")
 
+  sessions Session[]
+
   @@map("users")
 }
 
@@ -84,4 +86,18 @@ model Post {
   likes      Like[]
 
   @@map("posts")
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  token        String   @unique //Refresh token
+  expires_at   DateTime
+  ip_address   String?  // ex: "192.168.0.1"
+  user_agent   String?  // ex: "Mozilla/5.0 (Windows NT 10.0...)"
+  created_at   DateTime @default(now())
+
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
