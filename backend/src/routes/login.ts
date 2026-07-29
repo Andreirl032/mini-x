@@ -10,11 +10,13 @@ const router = Router();
 
 //Autenticar usuário
 router.post("/login", (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
-  const user = { name: username, password: password };
+  const { username, password } = req.body;
+  const jwtPayload = {
+    id: 1,
+    name: username
+  };
 
-  const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET!);
+  const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!);
   res.json({ accessToken: accessToken });
 });
 

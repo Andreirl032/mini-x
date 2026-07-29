@@ -32,6 +32,9 @@
     // Modern JS output. Node 22+ supports everything in es2025.
     "target": "es2025",
 
+    //TIPOS
+    "types": ["node"],
+
     // Compiled JS goes here. Add dist/ to .gitignore.
     "outDir": "./dist",
 
