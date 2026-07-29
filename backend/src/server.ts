@@ -1,16 +1,22 @@
 //PLACEHOLDER DE TESTE
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
+import express from "express";
+import cors from "cors";
+import "dotenv/config";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    allowedHeaders: ["Authorization", "Content-Type"],
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  return res.json({ message: 'API do Mini-Twitter rodando com sucesso!' });
-});
+// app.get('/', (req, res) => {
+//   return res.json({ message: 'API do Mini-Twitter rodando com sucesso!' });
+// });
 
 const PORT = process.env.PORT || 3000;
 
