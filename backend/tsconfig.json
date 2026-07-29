@@ -33,13 +33,13 @@
     "target": "es2025",
 
     //TIPOS
-    "types": ["node"],
+    "types": ["node", "jest", "express"],
 
     // Compiled JS goes here. Add dist/ to .gitignore.
     "outDir": "./dist",
 
     // Your source root. Preserves directory structure in outDir.
-    "rootDir": "./src",
+    "rootDir": ".",
 
     // Generate .d.ts files alongside JS output.
     // Essential if you're building a library. Harmless for applications.
@@ -64,7 +64,7 @@
   },
 
   // What to compile
-  "include": ["src/**/*"],
+  "include": ["src/**/*","prisma.config.ts","prisma/**/*.ts"],
 
   // What to ignore
   "exclude": ["node_modules", "dist", "tests"]
