@@ -18,15 +18,14 @@ const prisma = new PrismaClient({
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
     const userDb = await prisma.user.findUnique({
       where: { username: username },
     });
-    if (!userDb) {
+    if (!userDb || !userDb.password) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, hashedPassword);
+    const isPasswordValid = await bcrypt.compare(password, userDb.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
