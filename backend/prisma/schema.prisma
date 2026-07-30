@@ -99,5 +99,6 @@ model Session {
 
   user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@index([user_id, expires_at])
   @@map("sessions")
 }

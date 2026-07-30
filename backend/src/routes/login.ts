@@ -1,13 +1,13 @@
 // import express from "express"
 import { NextFunction, Request, Response, Router } from "express";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-// import path from "path";
-// import dotenv from "dotenv"
+import dotenv from "dotenv";
 
-// dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
 
 const router = Router();
 const prisma = new PrismaClient({
@@ -35,12 +35,38 @@ router.post("/login", async (req, res) => {
       username: userDb.username,
     };
 
-    const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!);
-    return res.json({ accessToken: accessToken });
+    const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
+      expiresIn: "3m",
+    });
+
+    await prisma.session.deleteMany({
+      where: {
+        user_id: userDb.id,
+        expires_at: { lt: new Date() }, // "lt" = less than (menor que agora)
+      },
+    });
+
+    const refreshToken = crypto.randomBytes(32).toString("hex");
+    await prisma.session.create({
+      data: {
+        user_id: userDb.id,
+        token: refreshToken,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
+
+        ip_address: req?.ip,
+        user_agent: req?.headers["user-agent"],
+      },
+    });
+
+    return res.json({ accessToken: accessToken, refreshToken: refreshToken });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
   }
+});
+
+router.get("/teste", authenticateToken, (req, res) => {
+  res.json({ oi: "ta funcionando" });
 });
 
 function authenticateToken(req: Request, res: Response, next: NextFunction) {
