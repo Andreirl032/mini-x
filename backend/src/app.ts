@@ -5,6 +5,7 @@ import loginRoutes from "./routes/login";
 
 import path from "path";
 import dotenv from "dotenv"
+import cookieParser from "cookie-parser";
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
@@ -18,6 +19,8 @@ app.use(
   }),
 );
 app.use(express.json());
+app.use(cookieParser());
+
 
 //ROTAS
 app.use(loginRoutes);

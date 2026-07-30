@@ -42,7 +42,10 @@ router.post("/login", async (req, res) => {
     await prisma.session.deleteMany({
       where: {
         user_id: userDb.id,
-        expires_at: { lt: new Date() }, // "lt" = less than (menor que agora)
+        OR: [
+          { expires_at: { lt: new Date() } },
+          { user_agent: req?.headers["user-agent"] },
+        ],
       },
     });
 
@@ -58,7 +61,14 @@ router.post("/login", async (req, res) => {
       },
     });
 
-    return res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({ accessToken: accessToken });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
