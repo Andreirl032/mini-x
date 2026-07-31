@@ -4,10 +4,11 @@ import cors from "cors";
 import loginRoutes from "./routes/auth";
 
 import path from "path";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import errorHandler from "./middlewares/errorHandler.middleware";
 
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 
@@ -21,10 +22,10 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-
 //ROTAS
 app.use(loginRoutes);
 
+app.use(errorHandler);
 export default app;
 
 // app.get('/', (req, res) => {
