@@ -9,13 +9,13 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const router = Router();
+const loginRouter = Router();
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
 
 //Autenticar usuário
-router.post("/login", async (req, res) => {
+loginRouter.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
     const userDb = await prisma.user.findUnique({
@@ -74,7 +74,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/refreshToken", async (req, res) => {
+loginRouter.post("/refreshToken", async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
@@ -135,7 +135,7 @@ router.post("/refreshToken", async (req, res) => {
   }
 });
 
-router.post("/logout", async (req, res) => {
+loginRouter.post("/logout", async (req, res) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     await prisma.session.delete({
@@ -151,4 +151,4 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-export default router;
+export default loginRouter;

@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 
-import loginRoutes from "./routes/login";
+import loginRoutes from "./routes/auth";
 
 import path from "path";
 import dotenv from "dotenv"
