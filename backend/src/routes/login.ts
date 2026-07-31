@@ -32,11 +32,10 @@ router.post("/login", async (req, res) => {
 
     const jwtPayload = {
       id: userDb.id,
-      username: userDb.username,
     };
 
     const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
-      expiresIn: "3m",
+      expiresIn: "5m",
     });
 
     await prisma.session.deleteMany({
@@ -72,6 +71,67 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/refreshToken", async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.sendStatus(401);
+    }
+    const refreshTokenDb = await prisma.session.findUnique({
+      where: {
+        token: refreshToken,
+      },
+    });
+    if (!refreshTokenDb) {
+      return res.sendStatus(401);
+    }
+    if (refreshTokenDb.expires_at < new Date()) {
+      await prisma.session.delete({
+        where: {
+          token: refreshToken,
+        },
+      });
+      res.clearCookie("refreshToken");
+      return res
+        .status(401)
+        .json({ message: "Expired session! Log in again." });
+    }
+
+    const jwtPayload = {
+      id: refreshTokenDb.user_id,
+    };
+    const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
+      expiresIn: "5m",
+    });
+
+    const newRefreshToken = crypto.randomBytes(32).toString("hex");
+    await prisma.session.update({
+      where: {
+        token: refreshToken,
+      },
+      data: {
+        user_id: refreshTokenDb.user_id,
+        token: newRefreshToken,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
+
+        ip_address: req?.ip,
+        user_agent: req?.headers["user-agent"],
+      },
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    return res.json({ accessToken: accessToken });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
