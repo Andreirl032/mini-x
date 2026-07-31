@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
+import { login } from "../controllers/auth.controller";
 
 dotenv.config();
 
@@ -15,64 +16,7 @@ const prisma = new PrismaClient({
 });
 
 //Autenticar usuário
-loginRouter.post("/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const userDb = await prisma.user.findUnique({
-      where: { username: username },
-    });
-    if (!userDb || !userDb.password) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, userDb.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid username or password" });
-    }
-
-    const jwtPayload = {
-      id: userDb.id,
-    };
-
-    const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
-      expiresIn: "5m",
-    });
-
-    await prisma.session.deleteMany({
-      where: {
-        user_id: userDb.id,
-        OR: [
-          { expires_at: { lt: new Date() } },
-          { user_agent: req?.headers["user-agent"] },
-        ],
-      },
-    });
-
-    const refreshToken = crypto.randomBytes(32).toString("hex");
-    await prisma.session.create({
-      data: {
-        user_id: userDb.id,
-        token: refreshToken,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
-
-        ip_address: req?.ip,
-        user_agent: req?.headers["user-agent"],
-      },
-    });
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return res.json({ accessToken: accessToken });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-});
+loginRouter.post("/login", login);
 
 loginRouter.post("/refreshToken", async (req, res) => {
   try {
