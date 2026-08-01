@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
-
-import loginRoutes from "./routes/auth";
-
 import path from "path";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middlewares/errorHandler.middleware";
+import authenticateToken from "./middlewares/auth.middleware";
+import loginRouter from "./routes/auth";
+import postRouter from "./routes/post";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -23,7 +23,13 @@ app.use(express.json());
 app.use(cookieParser());
 
 //ROTAS
-app.use(loginRoutes);
+app.use(loginRouter);
+
+//NECESSIDADE DE AUTENTICAÇÃO
+app.use(authenticateToken);
+
+//POSTAGENS
+app.use(postRouter);
 
 app.use(errorHandler);
 export default app;

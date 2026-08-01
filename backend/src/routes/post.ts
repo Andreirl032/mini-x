@@ -1,11 +1,12 @@
 import { Router } from "express";
 import dotenv from "dotenv";
+import { getPosts } from "../controllers/post.controller";
 
 dotenv.config();
 
 const postRouter = Router();
 
-postRouter.get("/posts");
+postRouter.get("/posts",getPosts);
 
 postRouter.get("/posts:id");
 
