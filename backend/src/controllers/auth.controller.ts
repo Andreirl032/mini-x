@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { loginUser } from "../services/auth.service";
+import { loginUser, refreshUserToken } from "../services/auth.service";
 import dotenv from "dotenv";
+import { AppError } from "../errors/AppError";
 dotenv.config();
 
 export async function login(req: Request, res: Response) {
@@ -27,4 +28,38 @@ export async function login(req: Request, res: Response) {
 
   // Envio do access token pro frontend (junto do cookie do refresh token salvo)
   return res.json({ accessToken: accessToken });
+}
+
+export async function refreshToken(req: Request, res: Response) {
+  // Adquire refresh token original
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    throw new AppError("Refresh token not found", 401);
+  }
+
+  try {
+    // Adquire o objeto do banco de dados relativo ao refresh token original, cria novo refresh token, cria novo access token
+    const { newRefreshToken, accessToken } = await refreshUserToken(
+      refreshToken,
+      req?.ip,
+      req?.headers["user-agent"],
+    );
+
+    //Cria cookie com novo refresh token
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // Retorna o access token para o frontend (com o cookie criado)
+    return res.json({ accessToken: accessToken });
+  } catch (error) {
+    if (error instanceof AppError && error.statusCode === 401) {
+      res.clearCookie("refreshToken");
+    }
+
+    throw error;
+  }
 }

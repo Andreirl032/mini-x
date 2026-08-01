@@ -1,12 +1,9 @@
 // import express from "express"
-import { NextFunction, Request, Response, Router } from "express";
-import jwt from "jsonwebtoken";
-import crypto from "crypto";
-import bcrypt from "bcryptjs";
+import { Router } from "express";
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
-import { login } from "../controllers/auth.controller";
+import { login, refreshToken } from "../controllers/auth.controller";
 
 dotenv.config();
 
@@ -18,66 +15,7 @@ const prisma = new PrismaClient({
 //Autenticar usuário
 loginRouter.post("/login", login);
 
-loginRouter.post("/refreshToken", async (req, res) => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      return res.sendStatus(401);
-    }
-    const refreshTokenDb = await prisma.session.findUnique({
-      where: {
-        token: refreshToken,
-      },
-    });
-    if (!refreshTokenDb) {
-      return res.sendStatus(401);
-    }
-    if (refreshTokenDb.expires_at < new Date()) {
-      await prisma.session.delete({
-        where: {
-          token: refreshToken,
-        },
-      });
-      res.clearCookie("refreshToken");
-      return res
-        .status(401)
-        .json({ message: "Expired session! Log in again." });
-    }
-
-    const jwtPayload = {
-      id: refreshTokenDb.user_id,
-    };
-    const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
-      expiresIn: "5m",
-    });
-
-    const newRefreshToken = crypto.randomBytes(32).toString("hex");
-    await prisma.session.update({
-      where: {
-        token: refreshToken,
-      },
-      data: {
-        user_id: refreshTokenDb.user_id,
-        token: newRefreshToken,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
-
-        ip_address: req?.ip,
-        user_agent: req?.headers["user-agent"],
-      },
-    });
-
-    res.cookie("refreshToken", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-    return res.json({ accessToken: accessToken });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+loginRouter.post("/refreshToken", refreshToken);
 
 loginRouter.post("/logout", async (req, res) => {
   try {

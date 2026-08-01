@@ -56,3 +56,52 @@ export async function loginUser(
   // Envio do access e refresh tokens
   return { accessToken, refreshToken };
 }
+
+export async function refreshUserToken(
+  refreshToken: string,
+  ipAddress: string | undefined,
+  userAgent: string | undefined,
+) {
+  const refreshTokenDb = await prisma.session.findUnique({
+    where: {
+      token: refreshToken,
+    },
+  });
+  if (!refreshTokenDb) {
+    throw new AppError("Refresh token not found", 401);
+  }
+
+  // Se refresh token original expirou, limpa o cookie de refresh token
+  if (refreshTokenDb.expires_at < new Date()) {
+    await prisma.session.delete({
+      where: {
+        token: refreshToken,
+      },
+    });
+    throw new AppError("Expired session! Log in again.", 401);
+  }
+
+  const newRefreshToken = crypto.randomBytes(32).toString("hex");
+  await prisma.session.update({
+    where: {
+      token: refreshToken,
+    },
+    data: {
+      user_id: refreshTokenDb.user_id,
+      token: newRefreshToken,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
+
+      ip_address: ipAddress,
+      user_agent: userAgent,
+    },
+  });
+
+  const jwtPayload = {
+    id: refreshTokenDb.user_id,
+  };
+  const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
+    expiresIn: "5m",
+  });
+
+  return { newRefreshToken, accessToken };
+}
