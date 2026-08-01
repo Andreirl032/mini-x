@@ -1,4 +1,3 @@
-// import express from "express"
 import { Router } from "express";
 import dotenv from "dotenv";
 import { login, logout, refreshToken } from "../controllers/auth.controller";

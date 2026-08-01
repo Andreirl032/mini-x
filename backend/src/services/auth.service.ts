@@ -107,7 +107,7 @@ export async function refreshUserToken(
 }
 
 export async function logoutUser(refreshToken: string) {
-  await prisma.session.delete({
+  await prisma.session.deleteMany({
     where: {
       token: refreshToken,
     },
