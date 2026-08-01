@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { loginUser, refreshUserToken } from "../services/auth.service";
+import {
+  loginUser,
+  logoutUser,
+  refreshUserToken,
+} from "../services/auth.service";
 import dotenv from "dotenv";
 import { AppError } from "../errors/AppError";
 dotenv.config();
@@ -62,4 +66,11 @@ export async function refreshToken(req: Request, res: Response) {
 
     throw error;
   }
+}
+
+export async function logout(req: Request, res: Response) {
+  const refreshToken = req.cookies.refreshToken;
+  await logoutUser(refreshToken);
+  res.clearCookie("refreshToken");
+  return res.status(200).json({ message: "Logout realizado com sucesso" });
 }

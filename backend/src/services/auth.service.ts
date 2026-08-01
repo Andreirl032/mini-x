@@ -105,3 +105,11 @@ export async function refreshUserToken(
 
   return { newRefreshToken, accessToken };
 }
+
+export async function logoutUser(refreshToken: string) {
+  await prisma.session.delete({
+    where: {
+      token: refreshToken,
+    },
+  });
+}
