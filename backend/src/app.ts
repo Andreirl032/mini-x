@@ -25,11 +25,13 @@ app.use(cookieParser());
 //ROTAS
 app.use(loginRouter);
 
-//NECESSIDADE DE AUTENTICAÇÃO
-app.use(authenticateToken);
-
 //POSTAGENS
 app.use(postRouter);
+
+//NECESSIDADE DE AUTENTICAÇÃO
+// app.use(authenticateToken);
+
+
 
 app.use(errorHandler);
 export default app;

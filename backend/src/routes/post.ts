@@ -1,19 +1,19 @@
 import { Router } from "express";
-import dotenv from "dotenv";
-import { getPosts } from "../controllers/post.controller";
-
-dotenv.config();
+import { getPostFromId, getPosts } from "../controllers/post.controller";
+import authenticateToken from "../middlewares/auth.middleware";
 
 const postRouter = Router();
 
-postRouter.get("/posts",getPosts);
+postRouter.get("/posts/:id",getPostFromId);
 
-postRouter.get("/posts:id");
+postRouter.use(authenticateToken)
+
+postRouter.get("/posts",getPosts);
 
 postRouter.post("/posts");
 
-postRouter.put("/posts:id");
+postRouter.put("/posts/:id");
 
-postRouter.delete("/posts:id");
+postRouter.delete("/posts/:id");
 
 export default postRouter;

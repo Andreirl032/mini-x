@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
-import dotenv from "dotenv";
-import { getPostsDb } from "../services/post.service";
-dotenv.config();
+import { getPostfromIdDb, getPostsDb } from "../services/post.service";
 
 export async function getPosts(req: Request, res: Response) {
   const take = 10;
@@ -12,4 +10,12 @@ export async function getPosts(req: Request, res: Response) {
   const nextCursor = posts.length === take ? posts[posts.length - 1].id : null;
 
   return res.json({ posts: posts, nextCursor: nextCursor });
+}
+
+export async function getPostFromId(req: Request, res: Response) {
+  const postId = req.params.id as string;
+
+  const post = await getPostfromIdDb(postId);
+
+  return res.json({ post: post });
 }

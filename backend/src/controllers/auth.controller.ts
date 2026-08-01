@@ -4,9 +4,7 @@ import {
   logoutUser,
   refreshUserToken,
 } from "../services/auth.service";
-import dotenv from "dotenv";
 import { AppError } from "../errors/AppError";
-dotenv.config();
 
 export async function login(req: Request, res: Response) {
   // Aquisição de informações do usuário pela requisição
