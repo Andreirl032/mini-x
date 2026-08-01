@@ -70,7 +70,9 @@ export async function refreshToken(req: Request, res: Response) {
 
 export async function logout(req: Request, res: Response) {
   const refreshToken = req.cookies.refreshToken;
-  await logoutUser(refreshToken);
-  res.clearCookie("refreshToken");
+  if (!refreshToken) {
+    await logoutUser(refreshToken);
+    res.clearCookie("refreshToken");
+  }
   return res.status(200).json({ message: "Logout realizado com sucesso" });
 }
