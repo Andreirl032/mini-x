@@ -24,3 +24,11 @@ export async function getPostfromIdDb(postId: string) {
 
   return postsDb;
 }
+
+export async function getLikesPostDb(postId: string) {
+  return await prisma.like.findMany({
+    where: {
+      post_id: postId,
+    },
+  });
+}

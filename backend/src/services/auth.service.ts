@@ -26,7 +26,7 @@ export async function loginUser(
 
   // Criação do payload e access token
   const jwtPayload = {
-    id: userDb.id,
+    user_id: userDb.id,
   };
   const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
     expiresIn: "5m",
