@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  deletePost,
   dislikePost,
   editPost,
   getPostFromId,
@@ -11,7 +12,7 @@ import authenticateToken from "../middlewares/auth.middleware";
 
 const postRouter = Router();
 
-postRouter.get("/posts/:id", getPostFromId);
+postRouter.get("/posts/:postId", getPostFromId);
 
 postRouter.use(authenticateToken);
 
@@ -19,12 +20,12 @@ postRouter.get("/posts", getPosts);
 
 postRouter.post("/posts", postPost);
 
-postRouter.put("/posts/:id",editPost);
+postRouter.put("/posts/:postId", editPost);
 
-postRouter.delete("/posts/:id");
+postRouter.delete("/posts/:postId", deletePost);
 
-postRouter.post("/posts/:id/likes", likePost);
+postRouter.post("/posts/:postId/likes", likePost);
 
-postRouter.delete("/posts/:id/likes", dislikePost);
+postRouter.delete("/posts/:postId/likes", dislikePost);
 
 export default postRouter;

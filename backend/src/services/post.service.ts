@@ -53,14 +53,32 @@ export async function postPostDb(
 }
 
 export async function editPostDb(
+  userId: string,
   postId: string,
   body: string | undefined,
   image: string | undefined,
 ) {
   await prisma.post.update({
-    where: { id: postId },
+    where: { id: postId, user_id: userId },
     data: { body: body, image: image },
   });
+}
+
+export async function deletePostDb(
+  userId: string,
+  postId: string,
+  parentId: string | undefined,
+) {
+  if (!parentId) {
+    await prisma.post.delete({
+      where: { id: postId, user_id: userId },
+    });
+  } else {
+    await prisma.post.update({
+      where: { id: postId, user_id: userId },
+      data: { is_deleted: true },
+    });
+  }
 }
 
 export async function likePostDb(postId: string, userId: string) {
