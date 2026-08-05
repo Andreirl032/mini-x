@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import {
-  getLikesPostDb,
+  dislikePostDb,
   getPostfromIdDb,
   getPostsDb,
+  likePostDb,
 } from "../services/post.service";
 
 export async function getPosts(req: Request, res: Response) {
@@ -24,15 +25,20 @@ export async function getPostFromId(req: Request, res: Response) {
   return res.json({ post: post });
 }
 
-export async function getLikesPost(req: Request, res: Response) {
-  const postId = req.params.postId as string;
-  return res.json({ likes: getLikesPostDb(postId) });
-}
-
 export async function likePost(req: Request, res: Response) {
   const postId = req.params.postId as string;
+  const userId = req.user.user_id;
+
+  const like = await likePostDb(postId, userId);
+
+  return res.status(201).json({ like: like });
 }
 
 export async function dislikePost(req: Request, res: Response) {
   const postId = req.params.postId as string;
+  const userId = req.user.user_id;
+
+  await dislikePostDb(postId, userId);
+
+  return res.sendStatus(204);
 }

@@ -41,10 +41,24 @@ export async function getPostfromIdDb(postId: string) {
   return postsDb;
 }
 
-export async function getLikesPostDb(postId: string) {
-  return await prisma.like.findMany({
+export async function likePostDb(postId: string, userId: string) {
+  const like = await prisma.like.create({
+    data: { post_id: postId, user_id: userId },
+  });
+  if (!like) {
+    throw new AppError("Failed to like post");
+  }
+  return like;
+}
+
+export async function dislikePostDb(postId: string, userId: string) {
+  const dislike = await prisma.like.delete({
     where: {
-      post_id: postId,
+      user_id_post_id: {
+        user_id: userId,
+        post_id: postId,
+      },
     },
   });
+  return dislike;
 }
