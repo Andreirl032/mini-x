@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import {
   dislikePostDb,
+  editPostDb,
   getPostfromIdDb,
   getPostsDb,
   likePostDb,
@@ -30,6 +31,13 @@ export async function postPost(req:Request,res:Response) {
   const userId = req.user.user_id;
   const {parentId,body,image}=req.body
   await postPostDb(userId,parentId,body,image)
+
+  return res.sendStatus(201);
+}
+
+export async function editPost(req:Request,res:Response) {
+  const {postId,body,image}=req.body
+  await editPostDb(postId,body,image)
 
   return res.sendStatus(201);
 }

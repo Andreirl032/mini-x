@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   dislikePost,
+  editPost,
   getPostFromId,
   getPosts,
   likePost,
@@ -18,7 +19,7 @@ postRouter.get("/posts", getPosts);
 
 postRouter.post("/posts", postPost);
 
-postRouter.put("/posts/:id");
+postRouter.put("/posts/:id",editPost);
 
 postRouter.delete("/posts/:id");
 

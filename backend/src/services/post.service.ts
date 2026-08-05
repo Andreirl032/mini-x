@@ -52,6 +52,17 @@ export async function postPostDb(
   });
 }
 
+export async function editPostDb(
+  postId: string,
+  body: string | undefined,
+  image: string | undefined,
+) {
+  await prisma.post.update({
+    where: { id: postId },
+    data: { body: body, image: image },
+  });
+}
+
 export async function likePostDb(postId: string, userId: string) {
   const like = await prisma.like.create({
     data: { post_id: postId, user_id: userId },
