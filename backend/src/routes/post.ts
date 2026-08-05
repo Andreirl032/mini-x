@@ -4,6 +4,7 @@ import {
   getPostFromId,
   getPosts,
   likePost,
+  postPost,
 } from "../controllers/post.controller";
 import authenticateToken from "../middlewares/auth.middleware";
 
@@ -15,7 +16,7 @@ postRouter.use(authenticateToken);
 
 postRouter.get("/posts", getPosts);
 
-postRouter.post("/posts");
+postRouter.post("/posts", postPost);
 
 postRouter.put("/posts/:id");
 

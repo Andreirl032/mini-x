@@ -4,6 +4,7 @@ import {
   getPostfromIdDb,
   getPostsDb,
   likePostDb,
+  postPostDb,
 } from "../services/post.service";
 
 export async function getPosts(req: Request, res: Response) {
@@ -23,6 +24,14 @@ export async function getPostFromId(req: Request, res: Response) {
   const post = await getPostfromIdDb(postId);
 
   return res.json({ post: post });
+}
+
+export async function postPost(req:Request,res:Response) {
+  const userId = req.user.user_id;
+  const {parentId,body,image}=req.body
+  await postPostDb(userId,parentId,body,image)
+
+  return res.sendStatus(201);
 }
 
 export async function likePost(req: Request, res: Response) {
