@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import {
   deletePostDb,
-  dislikePostDb,
+  unlikePostDb,
   editPostDb,
   getPostfromIdDb,
   getPostsDb,
@@ -63,11 +63,11 @@ export async function likePost(req: Request, res: Response) {
   return res.status(201).json({ like: like });
 }
 
-export async function dislikePost(req: Request, res: Response) {
+export async function unlikePost(req: Request, res: Response) {
   const postId = req.params.postId as string;
   const userId = req.user.user_id;
 
-  await dislikePostDb(postId, userId);
+  await unlikePostDb(postId, userId);
 
   return res.sendStatus(204);
 }

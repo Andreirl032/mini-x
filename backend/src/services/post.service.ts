@@ -91,8 +91,8 @@ export async function likePostDb(postId: string, userId: string) {
   return like;
 }
 
-export async function dislikePostDb(postId: string, userId: string) {
-  const dislike = await prisma.like.delete({
+export async function unlikePostDb(postId: string, userId: string) {
+  const unlike = await prisma.like.delete({
     where: {
       user_id_post_id: {
         user_id: userId,
@@ -100,5 +100,5 @@ export async function dislikePostDb(postId: string, userId: string) {
       },
     },
   });
-  return dislike;
+  return unlike;
 }
