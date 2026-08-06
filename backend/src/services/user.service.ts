@@ -203,23 +203,23 @@ export async function deleteUserDb(userId: string) {
   });
 
   // Soft delete nos posts com filhos
-  for (const post of userPosts) {
+  const postOperations = userPosts.map((post) => {
     if (post._count.replies > 0) {
-      await prisma.post.update({
+      return prisma.post.update({
         where: { id: post.id },
         data: { is_deleted: true, body: null, image: null },
       });
     }
     // Hard delete nos posts sem filhos
     else {
-      await prisma.post.delete({
+      return prisma.post.delete({
         where: { id: post.id },
       });
     }
-  }
-
-  // Deleta a conta
-  await prisma.user.delete({
-    where: { id: userId },
   });
+
+  await prisma.$transaction([
+    ...postOperations,
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
 }
