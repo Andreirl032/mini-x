@@ -3,7 +3,7 @@ import { AppError } from "../errors/AppError";
 
 export async function getPostsDb(take: number, cursor?: string) {
   const postsDb = await prisma.post.findMany({
-    take: take+1,
+    take: take + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     orderBy: { created_at: "desc" },
     include: {
@@ -14,7 +14,7 @@ export async function getPostsDb(take: number, cursor?: string) {
         select: { likes: true, replies: true },
       },
     },
-    where: { parent_id: null },
+    where: { parent_id: null, is_deleted: false },
   });
 
   let nextCursor: string | null = null;
@@ -67,24 +67,23 @@ export async function editPostDb(
   image: string | undefined,
 ) {
   await prisma.post.update({
-    where: { id: postId, user_id: userId },
+    where: { id: postId, user_id: userId, is_deleted: false },
     data: { body: body, image: image },
   });
 }
 
-export async function deletePostDb(
-  userId: string,
-  postId: string,
-  parentId: string | undefined,
-) {
-  if (!parentId) {
-    await prisma.post.delete({
-      where: { id: postId, user_id: userId },
-    });
-  } else {
+export async function deletePostDb(userId: string, postId: string) {
+  const repliesCount = await prisma.post.count({
+    where: { parent_id: postId },
+  });
+  if (repliesCount > 0) {
     await prisma.post.update({
       where: { id: postId, user_id: userId },
-      data: { is_deleted: true },
+      data: { is_deleted: true, body: null, image: null },
+    });
+  } else {
+    await prisma.post.delete({
+      where: { id: postId, user_id: userId },
     });
   }
 }

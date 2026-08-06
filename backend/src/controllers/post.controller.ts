@@ -46,8 +46,7 @@ export async function editPost(req: Request, res: Response) {
 export async function deletePost(req: Request, res: Response) {
   const userId = req.user.user_id;
   const postId = req.params.postId as string;
-  const { parentId } = req.body;
-  await deletePostDb(userId, postId, parentId);
+  await deletePostDb(userId, postId);
 
   return res.sendStatus(200);
 }
