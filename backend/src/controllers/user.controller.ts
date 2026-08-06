@@ -39,13 +39,28 @@ export async function viewUserPosts(req: Request, res: Response) {
   const userId = req.params.id as string;
   const selfId = req.user?.user_id;
   const cursor = req.query?.cursor as string | undefined;
-  const take=10
-  const { posts, nextCursor } = await viewUserPostsDb(userId,take, selfId, cursor);
+  const take = 10;
+  const { posts, nextCursor } = await viewUserPostsDb(
+    userId,
+    take,
+    selfId,
+    cursor,
+  );
   return res.status(200).json({ posts: posts, nextCursor: nextCursor });
 }
 
 export async function viewUserReplies(req: Request, res: Response) {
   const userId = req.params.id as string;
+  const selfId = req.user?.user_id;
+  const cursor = req.query?.cursor as string | undefined;
+  const take = 10;
+  const { posts, nextCursor } = await viewUserRepliesDb(
+    userId,
+    take,
+    selfId,
+    cursor,
+  );
+  return res.status(200).json({ posts: posts, nextCursor: nextCursor });
 }
 
 export async function viewUserLikes(req: Request, res: Response) {
@@ -71,5 +86,5 @@ export async function unfollow(req: Request, res: Response) {
 export async function deleteUser(req: Request, res: Response) {
   const userId = req.params.id as string;
   await deleteUserDb(userId);
-   return res.sendStatus(200);
+  return res.sendStatus(200);
 }

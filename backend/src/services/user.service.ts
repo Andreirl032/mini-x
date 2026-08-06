@@ -154,6 +154,7 @@ export async function viewUserPostsDb(
     where: {
       user_id: userId,
       parent_id: null,
+      is_deleted: false,
     },
   });
 
@@ -171,7 +172,45 @@ export async function viewUserPostsDb(
   return { posts: postsDb, nextCursor };
 }
 
-export async function viewUserRepliesDb(userId: string, selfId?: string) {}
+export async function viewUserRepliesDb(
+  userId: string,
+  take: number,
+  selfId?: string,
+  cursor?: string,
+) {
+  const limit = selfId ? take : Math.floor(take / 2);
+  const postsDb = await prisma.post.findMany({
+    take: selfId ? limit + 1 : limit,
+    ...(cursor && selfId ? { cursor: { id: cursor }, skip: 1 } : {}),
+    orderBy: { created_at: "desc" },
+    include: {
+      user: {
+        select: { username: true, name: true, profile_picture: true },
+      },
+      _count: {
+        select: { likes: true, replies: true },
+      },
+    },
+    where: {
+      user_id: userId,
+      parent_id: { not: null },
+      is_deleted: false,
+    },
+  });
+
+  if (!selfId) {
+    return { posts: postsDb, nextCursor: null };
+  }
+
+  let nextCursor: string | null = null;
+
+  if (postsDb.length > limit) {
+    const nextItem = postsDb.pop();
+    nextCursor = nextItem?.id || null;
+  }
+
+  return { posts: postsDb, nextCursor };
+}
 
 export async function viewUserLikesDb(parameters: any) {
   // Lógica de banco para buscar as curtidas de um usuário específico
