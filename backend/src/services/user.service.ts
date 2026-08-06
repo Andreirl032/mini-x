@@ -175,13 +175,11 @@ export async function viewUserPostsDb(
 export async function viewUserRepliesDb(
   userId: string,
   take: number,
-  selfId?: string,
   cursor?: string,
 ) {
-  const limit = selfId ? take : Math.floor(take / 2);
   const postsDb = await prisma.post.findMany({
-    take: selfId ? limit + 1 : limit,
-    ...(cursor && selfId ? { cursor: { id: cursor }, skip: 1 } : {}),
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     orderBy: { created_at: "desc" },
     include: {
       user: {
@@ -198,13 +196,9 @@ export async function viewUserRepliesDb(
     },
   });
 
-  if (!selfId) {
-    return { posts: postsDb, nextCursor: null };
-  }
-
   let nextCursor: string | null = null;
 
-  if (postsDb.length > limit) {
+  if (postsDb.length > take) {
     const nextItem = postsDb.pop();
     nextCursor = nextItem?.id || null;
   }
@@ -212,8 +206,46 @@ export async function viewUserRepliesDb(
   return { posts: postsDb, nextCursor };
 }
 
-export async function viewUserLikesDb(parameters: any) {
-  // Lógica de banco para buscar as curtidas de um usuário específico
+export async function viewUserLikesDb(
+  userId: string,
+  take: number,
+  cursor?: string,
+) {
+  const postsDb = await prisma.like.findMany({
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    orderBy: { created_at: "desc" },
+    where: {
+      // likes: { some: { user_id: userId } },
+      user_id: userId,
+      post: { is_deleted: false },
+    },
+
+    select: {
+      id: true,
+      post: {
+        include: {
+          user: {
+            select: { username: true, name: true, profile_picture: true },
+          },
+          _count: {
+            select: { likes: true, replies: true },
+          },
+        },
+      },
+    },
+  });
+
+  let nextCursor: string | null = null;
+
+  if (postsDb.length > take) {
+    const nextItem = postsDb.pop();
+    nextCursor = nextItem?.id || null;
+  }
+
+  const formattedPosts = postsDb.map((item) => item.post);
+
+  return { posts: formattedPosts, nextCursor };
 }
 
 export async function viewFollowersDb(parameters: any) {

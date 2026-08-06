@@ -51,20 +51,18 @@ export async function viewUserPosts(req: Request, res: Response) {
 
 export async function viewUserReplies(req: Request, res: Response) {
   const userId = req.params.id as string;
-  const selfId = req.user?.user_id;
   const cursor = req.query?.cursor as string | undefined;
   const take = 10;
-  const { posts, nextCursor } = await viewUserRepliesDb(
-    userId,
-    take,
-    selfId,
-    cursor,
-  );
+  const { posts, nextCursor } = await viewUserRepliesDb(userId, take, cursor);
   return res.status(200).json({ posts: posts, nextCursor: nextCursor });
 }
 
 export async function viewUserLikes(req: Request, res: Response) {
-  // Lógica para listar as curtidas de um usuário específico
+  const userId = req.params.id as string;
+  const cursor = req.query?.cursor as string | undefined;
+  const take = 10;
+  const { posts, nextCursor } = await viewUserLikesDb(userId, take, cursor);
+  return res.status(200).json({ posts: posts, nextCursor: nextCursor });
 }
 
 export async function viewFollowers(req: Request, res: Response) {
