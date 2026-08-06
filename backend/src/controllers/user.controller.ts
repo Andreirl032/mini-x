@@ -11,6 +11,7 @@ import {
   unfollowDb,
   deleteUserDb,
   CreateUserData,
+  EditUserData,
 } from "../services/user.service";
 
 export async function createUser(req: Request, res: Response) {
@@ -20,7 +21,10 @@ export async function createUser(req: Request, res: Response) {
 }
 
 export async function editUser(req: Request, res: Response) {
-  // Lógica para editar usuário (PATCH)
+  const userData: EditUserData = req.body;
+  const userId = req.user.user_id;
+  const user = await editUserDb(userId, userData);
+  return res.status(200).json({ user: user });
 }
 
 export async function viewUser(req: Request, res: Response) {

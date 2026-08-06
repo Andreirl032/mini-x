@@ -15,6 +15,15 @@ export interface CreateUserData {
   googleId?: string;
 }
 
+export interface EditUserData {
+  username?: string;
+  name?: string;
+  profilePicture?: string;
+  bio?: string;
+  city?: string;
+  countryCode?: string;
+}
+
 export async function createUserDb(data: CreateUserData) {
   const userExists = await prisma.user.findFirst({
     where: {
@@ -59,8 +68,28 @@ export async function createUserDb(data: CreateUserData) {
   return user;
 }
 
-export async function editUserDb(parameters: any) {
-  // Lógica de banco para editar usuário
+export async function editUserDb(userId: string, data: EditUserData) {
+  const checkUserExists = await prisma.user.findFirst({
+    where: { AND: [{ username: data.username }, { NOT: { id: userId } }] },
+  });
+  if (checkUserExists) {
+    throw new AppError("Username already exists", 409);
+  }
+  const user = await prisma.user.update({
+    data: {
+      username: data.username,
+      name: data.name,
+      profile_picture: data.profilePicture,
+      bio: data.bio,
+      city: data.city,
+      country_code: data.countryCode,
+    },
+    where: {
+      id: userId,
+    },
+  });
+
+  return user;
 }
 
 export async function viewUserDb(parameters: any) {
