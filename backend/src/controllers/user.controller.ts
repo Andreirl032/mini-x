@@ -69,5 +69,7 @@ export async function unfollow(req: Request, res: Response) {
 }
 
 export async function deleteUser(req: Request, res: Response) {
-  // Lógica para deletar a conta
+  const userId = req.params.id as string;
+  await deleteUserDb(userId);
+   return res.sendStatus(200);
 }

@@ -138,9 +138,9 @@ export async function viewUserPostsDb(
   selfId?: string,
   cursor?: string,
 ) {
-  const limit = selfId ? take : Math.floor(take / 2)
+  const limit = selfId ? take : Math.floor(take / 2);
   const postsDb = await prisma.post.findMany({
-    take: selfId ? limit+1 : limit,
+    take: selfId ? limit + 1 : limit,
     ...(cursor && selfId ? { cursor: { id: cursor }, skip: 1 } : {}),
     orderBy: { created_at: "desc" },
     include: {
@@ -152,12 +152,8 @@ export async function viewUserPostsDb(
       },
     },
     where: {
-      AND: [
-        {
-          user_id: userId,
-        },
-        { parent_id: null },
-      ],
+      user_id: userId,
+      parent_id: null,
     },
   });
 
@@ -197,6 +193,33 @@ export async function unfollowDb(parameters: any) {
   // Lógica de banco para deletar a relação de seguidor
 }
 
-export async function deleteUserDb(parameters: any) {
-  // Lógica de banco para deletar a conta
+export async function deleteUserDb(userId: string) {
+  // Consulta os posts
+  const userPosts = await prisma.post.findMany({
+    where: { user_id: userId },
+    include: {
+      _count: { select: { replies: true } },
+    },
+  });
+
+  // Soft delete nos posts com filhos
+  for (const post of userPosts) {
+    if (post._count.replies > 0) {
+      await prisma.post.update({
+        where: { id: post.id },
+        data: { is_deleted: true, body: null, image: null },
+      });
+    }
+    // Hard delete nos posts sem filhos
+    else {
+      await prisma.post.delete({
+        where: { id: post.id },
+      });
+    }
+  }
+
+  // Deleta a conta
+  await prisma.user.delete({
+    where: { id: userId },
+  });
 }
