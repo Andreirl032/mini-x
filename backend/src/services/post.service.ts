@@ -3,7 +3,7 @@ import { AppError } from "../errors/AppError";
 
 export async function getPostsDb(take: number, cursor?: string) {
   const postsDb = await prisma.post.findMany({
-    take: take,
+    take: take+1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     orderBy: { created_at: "desc" },
     include: {
@@ -14,9 +14,17 @@ export async function getPostsDb(take: number, cursor?: string) {
         select: { likes: true, replies: true },
       },
     },
+    where: { parent_id: null },
   });
 
-  return postsDb;
+  let nextCursor: string | null = null;
+
+  if (postsDb.length > take) {
+    const nextItem = postsDb.pop();
+    nextCursor = nextItem?.id || null;
+  }
+
+  return { posts: postsDb, nextCursor };
 }
 
 export async function getPostfromIdDb(postId: string) {

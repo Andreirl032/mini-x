@@ -12,6 +12,7 @@ import {
   deleteUserDb,
   CreateUserData,
   EditUserData,
+  viewUserRepliesDb,
 } from "../services/user.service";
 
 export async function createUser(req: Request, res: Response) {
@@ -35,7 +36,16 @@ export async function viewUser(req: Request, res: Response) {
 }
 
 export async function viewUserPosts(req: Request, res: Response) {
-  // Lógica para listar os posts de um usuário específico
+  const userId = req.params.id as string;
+  const selfId = req.user?.user_id;
+  const cursor = req.query?.cursor as string | undefined;
+  const take=10
+  const { posts, nextCursor } = await viewUserPostsDb(userId,take, selfId, cursor);
+  return res.status(200).json({ posts: posts, nextCursor: nextCursor });
+}
+
+export async function viewUserReplies(req: Request, res: Response) {
+  const userId = req.params.id as string;
 }
 
 export async function viewUserLikes(req: Request, res: Response) {

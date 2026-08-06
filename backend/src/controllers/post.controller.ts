@@ -13,9 +13,7 @@ export async function getPosts(req: Request, res: Response) {
   const take = 10;
   const cursor = req.query.cursor as string | undefined;
 
-  const posts = await getPostsDb(take, cursor);
-
-  const nextCursor = posts.length === take ? posts[posts.length - 1].id : null;
+  const { posts, nextCursor } = await getPostsDb(take, cursor);
 
   return res.json({ posts: posts, nextCursor: nextCursor });
 }

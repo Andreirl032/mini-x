@@ -11,6 +11,7 @@ import {
   viewUser,
   viewUserLikes,
   viewUserPosts,
+  viewUserReplies,
 } from "../controllers/user.controller";
 import { requireAccountOwner } from "../middlewares/accountOwner.middleware";
 import optionalAuth from "../middlewares/optionalAuth.middleware";
@@ -27,6 +28,9 @@ userRouter.get("/users/:id", optionalAuth, viewUser);
 userRouter.get("/users/:id/posts", optionalAuth, viewUserPosts);
 
 userRouter.use(authenticateToken);
+
+// Visualizar respostas
+userRouter.get("/users/:id/replies", viewUserReplies);
 
 //Seguir
 userRouter.post("/users/:id/follow", follow);
