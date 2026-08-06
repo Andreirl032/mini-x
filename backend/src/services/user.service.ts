@@ -92,8 +92,44 @@ export async function editUserDb(userId: string, data: EditUserData) {
   return user;
 }
 
-export async function viewUserDb(parameters: any) {
-  // Lógica de banco para buscar os dados da conta
+export async function viewUserDb(userId: string, selfId: string | undefined) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      username: true,
+      name: true,
+      bio: true,
+      profile_picture: true,
+      birth_date: true,
+      city: true,
+      country_code: true,
+      created_at: true,
+      _count: {
+        select: {
+          posts: true,
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const isFollowing = selfId
+    ? await prisma.follow.findUnique({
+        where: {
+          followed_id_follower_id: {
+            followed_id: userId,
+            follower_id: selfId,
+          },
+        },
+      })
+    : false;
+
+  return { user: user, isFollowing: !!isFollowing };
 }
 
 export async function viewUserPostsDb(parameters: any) {

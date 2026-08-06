@@ -21,7 +21,7 @@ const userRouter = Router();
 userRouter.post("/users", createUser);
 
 // Visualizar conta
-userRouter.get("/users/:id", viewUser);
+userRouter.get("/users/:id", optionalAuth, viewUser);
 
 // Visualizar posts
 userRouter.get("/users/:id/posts", optionalAuth, viewUserPosts);

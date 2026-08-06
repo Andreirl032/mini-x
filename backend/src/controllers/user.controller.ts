@@ -22,13 +22,16 @@ export async function createUser(req: Request, res: Response) {
 
 export async function editUser(req: Request, res: Response) {
   const userData: EditUserData = req.body;
-  const userId = req.user.user_id;
+  const userId = req.params.id as string;
   const user = await editUserDb(userId, userData);
   return res.status(200).json({ user: user });
 }
 
 export async function viewUser(req: Request, res: Response) {
-  // Lógica para visualizar os dados da conta
+  const userId = req.params.id as string;
+  const selfId = req.user?.user_id;
+  const { user, isFollowing } = await viewUserDb(userId, selfId);
+  return res.status(200).json({ user: user, isFollowing: isFollowing });
 }
 
 export async function viewUserPosts(req: Request, res: Response) {
