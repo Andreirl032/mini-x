@@ -20,7 +20,7 @@ postRouter.get("/posts", getPosts);
 
 postRouter.post("/posts", postPost);
 
-postRouter.put("/posts/:postId", editPost);
+postRouter.patch("/posts/:postId", editPost);
 
 postRouter.delete("/posts/:postId", deletePost);
 
