@@ -248,12 +248,82 @@ export async function viewUserLikesDb(
   return { posts: formattedPosts, nextCursor };
 }
 
-export async function viewFollowersDb(parameters: any) {
-  // Lógica de banco para buscar quem segue este usuário
+export async function viewFollowersDb(
+  userId: string,
+  take: number,
+  cursor?: string,
+) {
+  const followersDb = await prisma.follow.findMany({
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    orderBy: { created_at: "desc" },
+    where: {
+      followed_id: userId,
+    },
+
+    select: {
+      id: true,
+      follower: {
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          profile_picture: true,
+          bio: true,
+        },
+      },
+    },
+  });
+
+  let nextCursor: string | null = null;
+
+  if (followersDb.length > take) {
+    const nextItem = followersDb.pop();
+    nextCursor = nextItem?.id || null;
+  }
+
+  const formattedFollowers = followersDb.map((item) => item.follower);
+
+  return { followers: formattedFollowers, nextCursor };
 }
 
-export async function viewFollowingDb(parameters: any) {
-  // Lógica de banco para buscar quem este usuário está seguindo
+export async function viewFollowingDb(
+  userId: string,
+  take: number,
+  cursor?: string,
+) {
+  const followingDb = await prisma.follow.findMany({
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    orderBy: { created_at: "desc" },
+    where: {
+      follower_id: userId,
+    },
+
+    select: {
+      id: true,
+      followed: {
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          profile_picture: true,
+          bio: true,
+        },
+      },
+    },
+  });
+
+  let nextCursor: string | null = null;
+
+  if (followingDb.length > take) {
+    const nextItem = followingDb.pop();
+    nextCursor = nextItem?.id || null;
+  }
+
+  const formattedFollowing = followingDb.map((item) => item.followed);
+
+  return { following: formattedFollowing, nextCursor };
 }
 
 export async function followDb(parameters: any) {

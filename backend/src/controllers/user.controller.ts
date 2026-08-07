@@ -66,11 +66,19 @@ export async function viewUserLikes(req: Request, res: Response) {
 }
 
 export async function viewFollowers(req: Request, res: Response) {
-  // Lógica para listar quem segue este usuário
+  const userId = req.params.id as string;
+  const cursor = req.query?.cursor as string | undefined;
+  const take = 20;
+  const { followers, nextCursor } = await viewFollowersDb(userId, take, cursor);
+  return res.status(200).json({ followers: followers, nextCursor: nextCursor });
 }
 
 export async function viewFollowing(req: Request, res: Response) {
-  // Lógica para listar quem este usuário está seguindo
+  const userId = req.params.id as string;
+  const cursor = req.query?.cursor as string | undefined;
+  const take = 20;
+  const { following, nextCursor } = await viewFollowingDb(userId, take, cursor);
+  return res.status(200).json({ following: following, nextCursor: nextCursor });
 }
 
 export async function follow(req: Request, res: Response) {
