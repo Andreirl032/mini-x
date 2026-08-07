@@ -82,11 +82,17 @@ export async function viewFollowing(req: Request, res: Response) {
 }
 
 export async function follow(req: Request, res: Response) {
-  // Lógica para começar a seguir um usuário
+  const userId = req.params.id as string;
+  const selfId = req.user?.user_id;
+  await followDb(userId,selfId);
+  return res.sendStatus(200);
 }
 
 export async function unfollow(req: Request, res: Response) {
-  // Lógica para deixar de seguir um usuário
+  const userId = req.params.id as string;
+  const selfId = req.user?.user_id;
+  await unfollowDb(userId,selfId);
+  return res.sendStatus(200);
 }
 
 export async function deleteUser(req: Request, res: Response) {

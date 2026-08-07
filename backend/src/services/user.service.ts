@@ -1,6 +1,7 @@
 import prisma from "../database/prisma";
 import { AppError } from "../errors/AppError";
 import bcrypt from "bcryptjs";
+import { Prisma } from "../generated/prisma/client";
 
 export interface CreateUserData {
   username: string;
@@ -326,12 +327,36 @@ export async function viewFollowingDb(
   return { following: formattedFollowing, nextCursor };
 }
 
-export async function followDb(parameters: any) {
-  // Lógica de banco para criar a relação de seguidor
+export async function followDb(userId: string, selfId: string) {
+  if (userId === selfId)
+    throw new AppError("A user cannot follow themselves", 400);
+  await prisma.follow
+    .create({
+      data: { followed_id: userId, follower_id: selfId },
+    })
+    .catch((e) => {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2002") {
+          throw new AppError("Follow relation already exists", 409);
+        }
+      }
+    });
 }
 
-export async function unfollowDb(parameters: any) {
-  // Lógica de banco para deletar a relação de seguidor
+export async function unfollowDb(userId: string, selfId: string) {
+  await prisma.follow
+    .delete({
+      where: {
+        followed_id_follower_id: { followed_id: userId, follower_id: selfId },
+      },
+    })
+    .catch((e) => {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2025") {
+          throw new AppError("Follow relation does not exist", 404);
+        }
+      }
+    });
 }
 
 export async function deleteUserDb(userId: string) {
