@@ -7,7 +7,7 @@ export interface CreateUserData {
   username: string;
   name: string;
   email: string;
-  password?: string;
+  password: string;
   profilePicture?: string;
   bio?: string;
   birthDate?: string; // Vem como string do frontend
@@ -36,9 +36,10 @@ export async function createUserDb(data: CreateUserData) {
     throw new AppError("Username ou E-mail já estão em uso.", 409); // 409 = Conflict
   }
 
-  const password = !data.password
-    ? undefined
-    : await bcrypt.hash(data.password, 10);
+  // const password = !data.password
+  //   ? undefined
+  //   : await bcrypt.hash(data.password, 10);
+  const password = await bcrypt.hash(data.password, 10);
 
   const user = await prisma.user.create({
     data: {

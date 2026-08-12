@@ -15,11 +15,13 @@ import {
 } from "../controllers/user.controller";
 import { requireAccountOwner } from "../middlewares/accountOwner.middleware";
 import optionalAuth from "../middlewares/optionalAuth.middleware";
+import { validate } from "../middlewares/validate.middleware";
+import { createUserSchema, editUserSchema } from "../validation/user.schema";
 
 const userRouter = Router();
 
 // Criar usuário
-userRouter.post("/users", createUser);
+userRouter.post("/users", validate(createUserSchema), createUser);
 
 // Visualizar conta
 userRouter.get("/users/:id", optionalAuth, viewUser);
@@ -47,7 +49,7 @@ userRouter.get("/users/:id/following", viewFollowing);
 userRouter.use(requireAccountOwner);
 
 // Editar usuário
-userRouter.patch("/users/:id", editUser);
+userRouter.patch("/users/:id",validate(editUserSchema), editUser);
 
 // Visualizar curtidas
 userRouter.get("/users/:id/likes", viewUserLikes);

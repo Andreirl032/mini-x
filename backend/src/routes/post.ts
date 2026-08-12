@@ -9,6 +9,8 @@ import {
   postPost,
 } from "../controllers/post.controller";
 import authenticateToken from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
+import { editPostSchema, postSchema } from "../validation/post.schema";
 
 const postRouter = Router();
 
@@ -21,10 +23,10 @@ postRouter.use(authenticateToken);
 postRouter.get("/posts", getPosts);
 
 // Postar uma postagem
-postRouter.post("/posts", postPost);
+postRouter.post("/posts", validate(postSchema), postPost);
 
 // Editar post
-postRouter.patch("/posts/:postId", editPost);
+postRouter.patch("/posts/:postId",validate(editPostSchema), editPost);
 
 // Deletar post
 postRouter.delete("/posts/:postId", deletePost);

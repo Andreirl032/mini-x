@@ -21,7 +21,7 @@ model User {
   username        String    @unique
   name            String
   email           String    @unique
-  password        String?
+  password        String
   role            String
   profile_picture String?
   bio             String?

@@ -66,24 +66,47 @@ export async function editPostDb(
   body: string | undefined,
   image: string | undefined,
 ) {
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+
+  if (!post || post.is_deleted) throw new AppError("Post not found", 404);
+  if (post.user_id !== userId) throw new AppError("Unauthorized", 403);
+
   await prisma.post.update({
-    where: { id: postId, user_id: userId, is_deleted: false },
-    data: { body: body, image: image },
+    where: { id: postId },
+    data: { body, image },
   });
 }
 
 export async function deletePostDb(userId: string, postId: string) {
-  const repliesCount = await prisma.post.count({
-    where: { parent_id: postId },
+  // 1. Busca o post e JÁ conta as respostas (replies) na mesma viagem ao banco
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: {
+      _count: { select: { replies: true } },
+    },
   });
-  if (repliesCount > 0) {
+
+  // 2. Verifica se o post existe e se não está deletado
+  if (!post || post.is_deleted) {
+    throw new AppError("Post not found", 404);
+  }
+
+  // 3. Verifica se o usuário é o dono do post
+  if (post.user_id !== userId) {
+    throw new AppError("Unauthorized", 403);
+  }
+
+  // 4. Se tiver respostas, faz o Soft Delete
+  if (post._count.replies > 0) {
     await prisma.post.update({
-      where: { id: postId, user_id: userId },
+      where: { id: postId },
       data: { is_deleted: true, body: null, image: null },
     });
-  } else {
+  } 
+  // 5. Se não tiver respostas, faz o Hard Delete
+  else {
     await prisma.post.delete({
-      where: { id: postId, user_id: userId },
+      where: { id: postId },
     });
   }
 }
