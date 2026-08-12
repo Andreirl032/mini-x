@@ -345,33 +345,38 @@ export async function viewFollowingDb(
 export async function followDb(userId: string, selfId: string) {
   if (userId === selfId)
     throw new AppError("A user cannot follow themselves", 400);
-  await prisma.follow
-    .create({
+
+  try {
+    await prisma.follow.create({
       data: { followed_id: userId, follower_id: selfId },
-    })
-    .catch((e) => {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        if (e.code === "P2002") {
-          throw new AppError("Follow relation already exists", 409);
-        }
-      }
     });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new AppError("Follow relation already exists", 409);
+    }
+    throw error;
+  }
 }
 
 export async function unfollowDb(userId: string, selfId: string) {
-  await prisma.follow
-    .delete({
+  try {
+    await prisma.follow.delete({
       where: {
         followed_id_follower_id: { followed_id: userId, follower_id: selfId },
       },
-    })
-    .catch((e) => {
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        if (e.code === "P2025") {
-          throw new AppError("Follow relation does not exist", 404);
-        }
-      }
     });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new AppError("Follow relation does not exist", 404);
+    }
+    throw error;
+  }
 }
 
 export async function deleteUserDb(userId: string) {

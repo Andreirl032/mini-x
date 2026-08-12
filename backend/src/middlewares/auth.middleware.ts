@@ -1,17 +1,20 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { verifyAccessToken } from "../utils/jwt";
 
 function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
-  if (token == null) return res.sendStatus(401);
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
+  if (token == null) {
+    return res.status(401).json({ error: { message: "Unauthorized" } });
+  }
+
+  try {
+    req.user = verifyAccessToken(token);
     next();
-  });
+    return;
+  } catch {
+    return res.status(403).json({ error: { message: "Invalid or expired token" } });
+  }
 }
+
 export default authenticateToken;

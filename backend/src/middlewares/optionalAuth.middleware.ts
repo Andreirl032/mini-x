@@ -1,19 +1,23 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../utils/jwt";
 
-export default function optionalAuth(req: Request, res: Response, next: NextFunction) {
+export default function optionalAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    return next(); 
+    return next();
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string);
-    req.user = decoded; 
-    return next();
-  } catch (error) {
-    return next(); 
+    req.user = verifyAccessToken(token);
+  } catch {
+    // Token inválido: segue como visitante anônimo
   }
+
+  return next();
 }

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import countryCodes from "../../country_codes.json";
+const validCodes = countryCodes.map((c) => c.sigla);
 
 export const createUserSchema = z.object({
   username: z
@@ -12,10 +14,7 @@ export const createUserSchema = z.object({
   bio: z.string().max(160, "Bio cannot exceed 160 characters.").optional(),
   birthDate: z.string().optional(),
   city: z.string().optional(),
-  countryCode: z
-    .string()
-    .length(2, "Country code must be exactly 2 letters (e.g., US, BR).")
-    .optional(),
+  countryCode: z.enum(validCodes as [string, ...string[]]).optional(),
 });
 
 export const editUserSchema = createUserSchema

@@ -5,36 +5,75 @@ import {
   editPost,
   getPostFromId,
   getPosts,
+  getFeedFollowing,
+  getPostReplies,
   likePost,
   postPost,
 } from "../controllers/post.controller";
 import authenticateToken from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
-import { editPostSchema, postSchema } from "../validation/post.schema";
+import { createPostBodySchema, editPostBodySchema } from "../validation/post.schema";
+import {
+  postIdParamsSchema,
+  paginationQuerySchema,
+} from "../validation/common.schema";
+import { upload } from "../middlewares/upload.middleware";
 
 const postRouter = Router();
 
-// Visualizar post
-postRouter.get("/posts/:postId", getPostFromId);
+// Feed de quem você segue — registrado antes de /posts/:postId
+postRouter.get(
+  "/posts/feedFollowing",
+  authenticateToken,
+  validate({ query: paginationQuerySchema }),
+  getFeedFollowing,
+);
+
+postRouter.get(
+  "/posts/:postId",
+  validate({ params: postIdParamsSchema }),
+  getPostFromId,
+);
+postRouter.get(
+  "/posts/:postId/replies",
+  validate({ params: postIdParamsSchema, query: paginationQuerySchema }),
+  getPostReplies,
+);
 
 postRouter.use(authenticateToken);
 
-// Feed de posts
-postRouter.get("/posts", getPosts);
+postRouter.get("/posts", validate({ query: paginationQuerySchema }), getPosts);
 
-// Postar uma postagem
-postRouter.post("/posts", validate(postSchema), postPost);
+postRouter.post(
+  "/posts",
+  upload.single("image"),
+  validate({ body: createPostBodySchema }),
+  postPost,
+);
 
-// Editar post
-postRouter.patch("/posts/:postId",validate(editPostSchema), editPost);
+postRouter.patch(
+  "/posts/:postId",
+  upload.single("image"),
+  validate({ params: postIdParamsSchema, body: editPostBodySchema }),
+  editPost,
+);
 
-// Deletar post
-postRouter.delete("/posts/:postId", deletePost);
+postRouter.delete(
+  "/posts/:postId",
+  validate({ params: postIdParamsSchema }),
+  deletePost,
+);
 
-// Curtir post
-postRouter.post("/posts/:postId/likes", likePost);
+postRouter.post(
+  "/posts/:postId/likes",
+  validate({ params: postIdParamsSchema }),
+  likePost,
+);
 
-// Descurtir post
-postRouter.delete("/posts/:postId/likes", unlikePost);
+postRouter.delete(
+  "/posts/:postId/likes",
+  validate({ params: postIdParamsSchema }),
+  unlikePost,
+);
 
 export default postRouter;

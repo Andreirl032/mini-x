@@ -1,30 +1,67 @@
 import prisma from "../database/prisma";
 import { AppError } from "../errors/AppError";
+import { Prisma } from "../generated/prisma/client";
+
+const postInclude = {
+  user: {
+    select: { username: true, name: true, profile_picture: true },
+  },
+  _count: {
+    select: { likes: true, replies: true },
+  },
+} as const;
+
+function paginatePosts<T extends { id: string }>(posts: T[], take: number) {
+  let nextCursor: string | null = null;
+
+  if (posts.length > take) {
+    const nextItem = posts.pop();
+    nextCursor = nextItem?.id || null;
+  }
+
+  return { posts, nextCursor };
+}
 
 export async function getPostsDb(take: number, cursor?: string) {
   const postsDb = await prisma.post.findMany({
     take: take + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     orderBy: { created_at: "desc" },
-    include: {
-      user: {
-        select: { username: true, name: true, profile_picture: true },
-      },
-      _count: {
-        select: { likes: true, replies: true },
-      },
-    },
+    include: postInclude,
     where: { parent_id: null, is_deleted: false },
   });
 
-  let nextCursor: string | null = null;
+  return paginatePosts(postsDb, take);
+}
 
-  if (postsDb.length > take) {
-    const nextItem = postsDb.pop();
-    nextCursor = nextItem?.id || null;
-  }
+export async function getFeedFollowingDb(
+  userId: string,
+  take: number,
+  cursor?: string,
+) {
+  const following = await prisma.follow.findMany({
+    where: { follower_id: userId },
+    select: { followed_id: true },
+  });
 
-  return { posts: postsDb, nextCursor };
+  const authorIds = [
+    userId,
+    ...following.map((relation) => relation.followed_id),
+  ];
+
+  const postsDb = await prisma.post.findMany({
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    orderBy: { created_at: "desc" },
+    include: postInclude,
+    where: {
+      user_id: { in: authorIds },
+      parent_id: null,
+      is_deleted: false,
+    },
+  });
+
+  return paginatePosts(postsDb, take);
 }
 
 export async function getPostfromIdDb(postId: string) {
@@ -32,21 +69,42 @@ export async function getPostfromIdDb(postId: string) {
     where: {
       id: postId,
     },
-    include: {
-      user: {
-        select: { username: true, name: true, profile_picture: true },
-      },
-      _count: {
-        select: { likes: true, replies: true },
-      },
-    },
+    include: postInclude,
   });
 
-  if (!postsDb) {
+  if (!postsDb || postsDb.is_deleted) {
     throw new AppError("Post not found", 404);
   }
 
   return postsDb;
+}
+
+export async function getPostRepliesDb(
+  postId: string,
+  take: number,
+  cursor?: string,
+) {
+  const parentPost = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { id: true, is_deleted: true },
+  });
+
+  if (!parentPost || parentPost.is_deleted) {
+    throw new AppError("Post not found", 404);
+  }
+
+  const repliesDb = await prisma.post.findMany({
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    orderBy: { created_at: "asc" },
+    include: postInclude,
+    where: {
+      parent_id: postId,
+      is_deleted: false,
+    },
+  });
+
+  return paginatePosts(repliesDb, take);
 }
 
 export async function postPostDb(
@@ -55,6 +113,17 @@ export async function postPostDb(
   body: string | undefined,
   image: string | undefined,
 ) {
+  if (parentId) {
+    const parentPost = await prisma.post.findUnique({
+      where: { id: parentId },
+      select: { id: true, is_deleted: true },
+    });
+
+    if (!parentPost || parentPost.is_deleted) {
+      throw new AppError("Parent post not found", 404);
+    }
+  }
+
   await prisma.post.create({
     data: { user_id: userId, parent_id: parentId, body: body, image: image },
   });
@@ -78,7 +147,6 @@ export async function editPostDb(
 }
 
 export async function deletePostDb(userId: string, postId: string) {
-  // 1. Busca o post e JÁ conta as respostas (replies) na mesma viagem ao banco
   const post = await prisma.post.findUnique({
     where: { id: postId },
     include: {
@@ -86,25 +154,20 @@ export async function deletePostDb(userId: string, postId: string) {
     },
   });
 
-  // 2. Verifica se o post existe e se não está deletado
   if (!post || post.is_deleted) {
     throw new AppError("Post not found", 404);
   }
 
-  // 3. Verifica se o usuário é o dono do post
   if (post.user_id !== userId) {
     throw new AppError("Unauthorized", 403);
   }
 
-  // 4. Se tiver respostas, faz o Soft Delete
   if (post._count.replies > 0) {
     await prisma.post.update({
       where: { id: postId },
       data: { is_deleted: true, body: null, image: null },
     });
-  } 
-  // 5. Se não tiver respostas, faz o Hard Delete
-  else {
+  } else {
     await prisma.post.delete({
       where: { id: postId },
     });
@@ -112,23 +175,47 @@ export async function deletePostDb(userId: string, postId: string) {
 }
 
 export async function likePostDb(postId: string, userId: string) {
-  const like = await prisma.like.create({
-    data: { post_id: postId, user_id: userId },
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { id: true, is_deleted: true },
   });
-  if (!like) {
-    throw new AppError("Failed to like post");
+
+  if (!post || post.is_deleted) {
+    throw new AppError("Post not found", 404);
   }
-  return like;
+
+  try {
+    return await prisma.like.create({
+      data: { post_id: postId, user_id: userId },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new AppError("Already liked", 409);
+    }
+    throw error;
+  }
 }
 
 export async function unlikePostDb(postId: string, userId: string) {
-  const unlike = await prisma.like.delete({
-    where: {
-      user_id_post_id: {
-        user_id: userId,
-        post_id: postId,
+  try {
+    return await prisma.like.delete({
+      where: {
+        user_id_post_id: {
+          user_id: userId,
+          post_id: postId,
+        },
       },
-    },
-  });
-  return unlike;
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new AppError("Like not found", 404);
+    }
+    throw error;
+  }
 }

@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { AppError } from "../errors/AppError";
 import prisma from "../database/prisma";
+import { signAccessToken } from "../utils/jwt";
 
 export async function loginUser(
   username: string,
@@ -10,12 +10,10 @@ export async function loginUser(
   userAgent: string | undefined,
   ipAddress: string | undefined,
 ) {
-  // Consulta de banco pelo nome de usuário
   const userDb = await prisma.user.findUnique({
     where: { username: username },
   });
 
-  // Erros de senha e ausência de campos
   if (!userDb || !userDb.password) {
     throw new AppError("Invalid username or password", 401);
   }
@@ -24,36 +22,27 @@ export async function loginUser(
     throw new AppError("Invalid username or password", 401);
   }
 
-  // Criação do payload e access token
-  const jwtPayload = {
-    user_id: userDb.id,
-  };
-  const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
-    expiresIn: "5m",
-  });
+  const accessToken = signAccessToken(userDb.id);
 
-  // Limpeza de refresh tokens no banco já expirados
   await prisma.session.deleteMany({
     where: {
       user_id: userDb.id,
-      OR: [{ expires_at: { lt: new Date() } }, { user_agent: userAgent }],
+      OR: [{ expires_at: { lt: new Date() } }],
     },
   });
 
-  // Criação de novo refresh token
   const refreshToken = crypto.randomBytes(32).toString("hex");
   await prisma.session.create({
     data: {
       user_id: userDb.id,
       token: refreshToken,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
 
       ip_address: ipAddress,
       user_agent: userAgent,
     },
   });
 
-  // Envio do access e refresh tokens
   return { accessToken, refreshToken };
 }
 
@@ -71,7 +60,6 @@ export async function refreshUserToken(
     throw new AppError("Refresh token not found", 401);
   }
 
-  // Se refresh token original expirou, limpa o cookie de refresh token
   if (refreshTokenDb.expires_at < new Date()) {
     await prisma.session.delete({
       where: {
@@ -89,19 +77,14 @@ export async function refreshUserToken(
     data: {
       user_id: refreshTokenDb.user_id,
       token: newRefreshToken,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), //7 dias
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
 
       ip_address: ipAddress,
       user_agent: userAgent,
     },
   });
 
-  const jwtPayload = {
-    user_id: refreshTokenDb.user_id,
-  };
-  const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
-    expiresIn: "5m",
-  });
+  const accessToken = signAccessToken(refreshTokenDb.user_id);
 
   return { newRefreshToken, accessToken };
 }

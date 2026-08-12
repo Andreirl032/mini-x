@@ -18,52 +18,87 @@ import { requireAccountOwner } from "../middlewares/accountOwner.middleware";
 import optionalAuth from "../middlewares/optionalAuth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { createUserSchema, editUserSchema } from "../validation/user.schema";
+import {
+  userIdParamsSchema,
+  paginationQuerySchema,
+} from "../validation/common.schema";
 import { upload } from "../middlewares/upload.middleware";
 
 const userRouter = Router();
 
-// Criar usuário
-userRouter.post("/users", validate(createUserSchema), createUser);
+userRouter.post("/users", validate({ body: createUserSchema }), createUser);
 
-// Visualizar conta
-userRouter.get("/users/:id", optionalAuth, viewUser);
+userRouter.get(
+  "/users/:id",
+  optionalAuth,
+  validate({ params: userIdParamsSchema }),
+  viewUser,
+);
 
-// Visualizar posts
-userRouter.get("/users/:id/posts", optionalAuth, viewUserPosts);
+userRouter.get(
+  "/users/:id/posts",
+  optionalAuth,
+  validate({ params: userIdParamsSchema, query: paginationQuerySchema }),
+  viewUserPosts,
+);
 
 userRouter.use(authenticateToken);
 
-// Visualizar respostas
-userRouter.get("/users/:id/replies", viewUserReplies);
+userRouter.get(
+  "/users/:id/replies",
+  validate({ params: userIdParamsSchema, query: paginationQuerySchema }),
+  viewUserReplies,
+);
 
-//Seguir
-userRouter.post("/users/:id/follow", follow);
+userRouter.post(
+  "/users/:id/follow",
+  validate({ params: userIdParamsSchema }),
+  follow,
+);
 
-//Deixar de seguir
-userRouter.delete("/users/:id/follow", unfollow);
+userRouter.delete(
+  "/users/:id/follow",
+  validate({ params: userIdParamsSchema }),
+  unfollow,
+);
 
-//Visualizar seguidores
-userRouter.get("/users/:id/followers", viewFollowers);
+userRouter.get(
+  "/users/:id/followers",
+  validate({ params: userIdParamsSchema, query: paginationQuerySchema }),
+  viewFollowers,
+);
 
-//Visualizar seguindo
-userRouter.get("/users/:id/following", viewFollowing);
+userRouter.get(
+  "/users/:id/following",
+  validate({ params: userIdParamsSchema, query: paginationQuerySchema }),
+  viewFollowing,
+);
 
 userRouter.use(requireAccountOwner);
 
-// Editar usuário
-userRouter.patch("/users/:id",validate(editUserSchema), editUser);
-
-// Visualizar curtidas
-userRouter.get("/users/:id/likes", viewUserLikes);
-
-// Deletar conta
-userRouter.delete("/users/:id", deleteUser);
-
-// Mudar foto de perfil
 userRouter.patch(
-  "/users/:id/avatar",
-  upload.single("image"), // "image" é o nome do campo que o frontend vai enviar no FormData
-  uploadProfilePicture
+  "/users/:id",
+  validate({ params: userIdParamsSchema, body: editUserSchema }),
+  editUser,
 );
 
-export default userRouter
+userRouter.get(
+  "/users/:id/likes",
+  validate({ params: userIdParamsSchema, query: paginationQuerySchema }),
+  viewUserLikes,
+);
+
+userRouter.delete(
+  "/users/:id",
+  validate({ params: userIdParamsSchema }),
+  deleteUser,
+);
+
+userRouter.patch(
+  "/users/:id/avatar",
+  validate({ params: userIdParamsSchema }),
+  upload.single("image"),
+  uploadProfilePicture,
+);
+
+export default userRouter;
