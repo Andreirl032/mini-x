@@ -14,6 +14,7 @@ import {
   EditUserData,
   viewUserRepliesDb,
 } from "../services/user.service";
+import { uploadImageToSupabase } from "../services/storage.service";
 
 export async function createUser(req: Request, res: Response) {
   const userData: CreateUserData = req.body;
@@ -84,14 +85,14 @@ export async function viewFollowing(req: Request, res: Response) {
 export async function follow(req: Request, res: Response) {
   const userId = req.params.id as string;
   const selfId = req.user?.user_id;
-  await followDb(userId,selfId);
+  await followDb(userId, selfId);
   return res.sendStatus(200);
 }
 
 export async function unfollow(req: Request, res: Response) {
   const userId = req.params.id as string;
   const selfId = req.user?.user_id;
-  await unfollowDb(userId,selfId);
+  await unfollowDb(userId, selfId);
   return res.sendStatus(200);
 }
 
@@ -99,4 +100,33 @@ export async function deleteUser(req: Request, res: Response) {
   const userId = req.params.id as string;
   await deleteUserDb(userId);
   return res.sendStatus(200);
+}
+
+export async function uploadProfilePicture(req: Request, res: Response) {
+  const userId = req.user?.user_id;
+
+  // Verifica se o middleware do multer realmente pegou o arquivo
+  if (!req.file) {
+    return res.status(400).json({ error: "No image file provided" });
+  }
+
+  // Cria um nome único para a imagem (ex: 12345-avatar.jpg)
+  const fileExtension = req.file.mimetype.split("/")[1];
+  const fileName = `${userId}-avatar.${fileExtension}`;
+
+  // Faz o upload pro Supabase
+  const imageUrl = await uploadImageToSupabase(
+    req.file.buffer,
+    fileName,
+    req.file.mimetype,
+    "avatars",
+  );
+
+  // Atualiza o banco de dados (reaproveitando sua função editUserDb)
+  const updatedUser = await editUserDb(userId, { profilePicture: imageUrl });
+
+  return res.status(200).json({
+    message: "Profile picture updated successfully",
+    user: updatedUser,
+  });
 }

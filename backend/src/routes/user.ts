@@ -6,6 +6,7 @@ import {
   editUser,
   follow,
   unfollow,
+  uploadProfilePicture,
   viewFollowers,
   viewFollowing,
   viewUser,
@@ -17,6 +18,7 @@ import { requireAccountOwner } from "../middlewares/accountOwner.middleware";
 import optionalAuth from "../middlewares/optionalAuth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { createUserSchema, editUserSchema } from "../validation/user.schema";
+import { upload } from "../middlewares/upload.middleware";
 
 const userRouter = Router();
 
@@ -56,3 +58,10 @@ userRouter.get("/users/:id/likes", viewUserLikes);
 
 // Deletar conta
 userRouter.delete("/users/:id", deleteUser);
+
+// Mudar foto de perfil
+userRouter.patch(
+  "/users/:id/avatar",
+  upload.single("image"), // "image" é o nome do campo que o frontend vai enviar no FormData
+  uploadProfilePicture
+);
