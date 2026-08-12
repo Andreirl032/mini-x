@@ -12,17 +12,24 @@ datasource db {
   provider = "postgresql"
 }
 
+// ENUM
+
+enum Role {
+  ADMIN
+  USER
+}
+
 // --------------------------------------------------
 // TABELAS (Models)
 // --------------------------------------------------
 
 model User {
-  id              String    @id @default(cuid())
+  id              String    @id @default(cuid(2))
   username        String    @unique
   name            String
   email           String    @unique
   password        String
-  role            String
+  role            Role      @default(USER)
   profile_picture String?
   bio             String?
   birth_date      DateTime?
@@ -44,7 +51,7 @@ model User {
 }
 
 model Follow {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid(2))
   follower_id String
   followed_id String
   created_at  DateTime @default(now())
@@ -58,7 +65,7 @@ model Follow {
 }
 
 model Like {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   user_id    String
   post_id    String
   created_at DateTime @default(now())
@@ -72,7 +79,7 @@ model Like {
 }
 
 model Post {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   user_id    String?
   parent_id  String?
   body       String?
@@ -96,7 +103,7 @@ model Post {
 }
 
 model Session {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid(2))
   user_id    String
   token      String   @unique //Refresh token
   expires_at DateTime

@@ -97,7 +97,7 @@ export async function refreshUserToken(
   });
 
   const jwtPayload = {
-    id: refreshTokenDb.user_id,
+    user_id: refreshTokenDb.user_id,
   };
   const accessToken = jwt.sign(jwtPayload, process.env.ACCESS_TOKEN_SECRET!, {
     expiresIn: "5m",

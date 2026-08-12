@@ -65,3 +65,5 @@ userRouter.patch(
   upload.single("image"), // "image" é o nome do campo que o frontend vai enviar no FormData
   uploadProfilePicture
 );
+
+export default userRouter

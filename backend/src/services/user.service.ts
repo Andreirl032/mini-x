@@ -71,12 +71,16 @@ export async function createUserDb(data: CreateUserData) {
 }
 
 export async function editUserDb(userId: string, data: EditUserData) {
-  const checkUserExists = await prisma.user.findFirst({
-    where: { AND: [{ username: data.username }, { NOT: { id: userId } }] },
-  });
-  if (checkUserExists) {
-    throw new AppError("Username already exists", 409);
+  if (data.username) {
+    const existingUser = await prisma.user.findUnique({
+      where: { username: data.username },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+      throw new AppError("Username already in use", 409);
+    }
   }
+
   const user = await prisma.user.update({
     data: {
       username: data.username,
@@ -88,6 +92,16 @@ export async function editUserDb(userId: string, data: EditUserData) {
     },
     where: {
       id: userId,
+    },
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      email: true,
+      role: true,
+      profile_picture: true,
+      bio: true,
+      created_at: true,
     },
   });
 
@@ -108,7 +122,7 @@ export async function viewUserDb(userId: string, selfId?: string) {
       created_at: true,
       _count: {
         select: {
-          posts: true,
+          posts: { where: { is_deleted: false } },
           followers: true,
           following: true,
         },

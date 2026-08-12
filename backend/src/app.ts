@@ -4,9 +4,9 @@ import path from "path";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middlewares/errorHandler.middleware";
-import authenticateToken from "./middlewares/auth.middleware";
 import loginRouter from "./routes/auth";
 import postRouter from "./routes/post";
+import userRouter from "./routes/user";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -28,10 +28,8 @@ app.use(loginRouter);
 //POSTAGENS
 app.use(postRouter);
 
-//NECESSIDADE DE AUTENTICAÇÃO
-// app.use(authenticateToken);
-
-
+//USUÁRIOS
+app.use(userRouter);
 
 app.use(errorHandler);
 export default app;
