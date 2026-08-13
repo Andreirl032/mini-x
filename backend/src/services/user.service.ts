@@ -33,7 +33,7 @@ export async function createUserDb(data: CreateUserData) {
   });
 
   if (userExists) {
-    throw new AppError("Username ou E-mail já estão em uso.", 409); // 409 = Conflict
+    throw new AppError("Username or email already in use.", 409);
   }
 
   // const password = !data.password

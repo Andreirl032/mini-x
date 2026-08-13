@@ -52,9 +52,9 @@ export async function getFeedFollowing(req: Request, res: Response) {
 
 export async function getPostFromId(req: Request, res: Response) {
   const postId = req.params.postId as string;
-  const post = await getPostfromIdDb(postId);
+  const { post, ancestors } = await getPostfromIdDb(postId);
 
-  return res.json(apiSuccess({ post }));
+  return res.json(apiSuccess({ post, ancestors }));
 }
 
 export async function getPostReplies(req: Request, res: Response) {

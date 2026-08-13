@@ -65,18 +65,33 @@ export async function getFeedFollowingDb(
 }
 
 export async function getPostfromIdDb(postId: string) {
-  const postsDb = await prisma.post.findUnique({
+  const post = await prisma.post.findUnique({
     where: {
       id: postId,
     },
     include: postInclude,
   });
 
-  if (!postsDb || postsDb.is_deleted) {
+  if (!post || post.is_deleted) {
     throw new AppError("Post not found", 404);
   }
 
-  return postsDb;
+  const ancestors = [];
+  let parentId = post.parent_id;
+
+  while (parentId) {
+    const parent = await prisma.post.findUnique({
+      where: { id: parentId },
+      include: postInclude,
+    });
+
+    if (!parent || parent.is_deleted) break;
+
+    ancestors.unshift(parent);
+    parentId = parent.parent_id;
+  }
+
+  return { post, ancestors };
 }
 
 export async function getPostRepliesDb(

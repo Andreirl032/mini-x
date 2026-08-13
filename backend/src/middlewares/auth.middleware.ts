@@ -13,7 +13,8 @@ function authenticateToken(req: Request, res: Response, next: NextFunction) {
     next();
     return;
   } catch {
-    return res.status(403).json({ error: { message: "Invalid or expired token" } });
+    // 401 so the client can refresh; 403 is reserved for forbidden actions
+    return res.status(401).json({ error: { message: "Invalid or expired token" } });
   }
 }
 

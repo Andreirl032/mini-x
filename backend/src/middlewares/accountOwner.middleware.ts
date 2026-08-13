@@ -6,11 +6,13 @@ export function requireAccountOwner(
   next: NextFunction,
 ) {
   const targetUserId = req.params.id;
-  const loggedInUserId = req.user!.user_id;
+  const loggedInUserId = req.user?.user_id;
 
-  if (targetUserId !== loggedInUserId) {
+  if (!loggedInUserId || targetUserId !== loggedInUserId) {
     return res.status(403).json({
-      error: { message: "Você não tem permissão para alterar esta conta." },
+      error: {
+        message: "You do not have permission to modify this account.",
+      },
     });
   }
 

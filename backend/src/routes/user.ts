@@ -74,28 +74,30 @@ userRouter.get(
   viewFollowing,
 );
 
-userRouter.use(requireAccountOwner);
-
-userRouter.patch(
-  "/users/:id",
-  validate({ params: userIdParamsSchema, body: editUserSchema }),
-  editUser,
-);
-
 userRouter.get(
   "/users/:id/likes",
+  requireAccountOwner,
   validate({ params: userIdParamsSchema, query: paginationQuerySchema }),
   viewUserLikes,
 );
 
+userRouter.patch(
+  "/users/:id",
+  requireAccountOwner,
+  validate({ params: userIdParamsSchema, body: editUserSchema }),
+  editUser,
+);
+
 userRouter.delete(
   "/users/:id",
+  requireAccountOwner,
   validate({ params: userIdParamsSchema }),
   deleteUser,
 );
 
 userRouter.patch(
   "/users/:id/avatar",
+  requireAccountOwner,
   validate({ params: userIdParamsSchema }),
   upload.single("image"),
   uploadProfilePicture,

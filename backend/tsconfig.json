@@ -60,7 +60,10 @@
 
     // Ensure import casing matches the filesystem.
     // Saves you from "works on Mac, breaks on Linux" issues.
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+
+    // Skip typechecking .d.ts in node_modules (e.g. @supabase/auth-js vs DOM libs).
+    "skipLibCheck": true
   },
 
   // What to compile
