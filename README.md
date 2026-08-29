@@ -18,14 +18,14 @@ mini-x/
 
 ## App screenshots
 
-# Home page
+### Home page
 
 ![home screenshot](readme-images/home.png)
 
-# Login page
+### Login page
 ![login screenshot](readme-images/login.png)
 
-# Profile page
+### Profile page
 ![profile screenshot](readme-images/profile.png)
 
 ## Features
