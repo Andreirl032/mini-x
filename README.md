@@ -16,6 +16,17 @@ mini-x/
 
 ---
 
+## App screenshots
+
+Home page
+![home screenshot](readme-images/home.png)
+
+Login page
+![login screenshot](readme-images/login.png)
+
+Profile page
+![login screenshot](readme-images/profile.png)
+
 ## Features
 
 - Register / login / logout with access token + rotating refresh token (httpOnly cookie)
